@@ -17,9 +17,6 @@ permissions:
 jobs:
   preprocess:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: Eksperimen_MSML_Daffa_Al-Fathir_Ismail
 
     steps:
       - name: Checkout repository
@@ -60,17 +57,14 @@ jobs:
           import shutil
           import os
 
-          # Download dataset
           print('Downloading Vegetable Image Dataset from Kaggle...')
           path = kagglehub.dataset_download('misrakahmed/vegetable-image-dataset')
           print(f'Downloaded to: {path}')
 
-          # Move to expected location
           target = 'Vegetables_raw'
           if os.path.exists(target):
               shutil.rmtree(target)
 
-          # Check if nested structure exists
           if os.path.exists(os.path.join(path, 'Vegetable Images')):
               shutil.move(os.path.join(path, 'Vegetable Images'), target)
           else:
@@ -100,6 +94,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: vegetables-preprocessing
-          path: Eksperimen_MSML_Daffa_Al-Fathir_Ismail/preprocessing/Vegetables_preprocessing
+          path: preprocessing/Vegetables_preprocessing
           retention-days: 30
           if-no-files-found: error
