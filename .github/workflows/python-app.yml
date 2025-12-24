@@ -3,13 +3,13 @@ name: Preprocess Dataset (Vegetables)
 on:
   workflow_dispatch:
   push:
-    branches: ["main", "master"]
+    branches: ["main"]
     paths:
       - "preprocessing/**"
       - ".workflow/preprocess.yml"
       - ".github/workflows/preprocess.yml"
   pull_request:
-    branches: ["main", "master"]
+    branches: ["main"]
 
 permissions:
   contents: write # Allow committing results if needed
@@ -17,11 +17,12 @@ permissions:
 jobs:
   preprocess:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          lfs: true
+          lfs: true # Enable Git LFS if used
 
       - name: Debug repo structure
         run: ls -R
@@ -34,6 +35,9 @@ jobs:
         with:
           python-version: "3.11"
           cache: "pip"
+
+      - name: Display Python version
+        run: python -c "import sys; print(sys.version)"
 
       - name: Install dependencies
         run: |
@@ -51,8 +55,27 @@ jobs:
 
       - name: Download dataset from Kaggle
         run: |
-          python preprocessing/download_dataset.py
-          
+          python -c "
+          import kagglehub
+          import shutil
+          import os
+
+          print('Downloading Vegetable Image Dataset from Kaggle...')
+          path = kagglehub.dataset_download('misrakahmed/vegetable-image-dataset')
+          print(f'Downloaded to: {path}')
+
+          target = 'Vegetables_raw'
+          if os.path.exists(target):
+              shutil.rmtree(target)
+
+          if os.path.exists(os.path.join(path, 'Vegetable Images')):
+              shutil.move(os.path.join(path, 'Vegetable Images'), target)
+          else:
+              shutil.move(path, target)
+
+          print(f'Dataset ready at: {target}')
+          "
+
       - name: Run preprocessing
         run: |
           python preprocessing/automate_Daffa.py \
@@ -61,6 +84,7 @@ jobs:
 
       - name: Verify preprocessing output
         run: |
+          echo "Checking if preprocessing completed successfully..."
           if [ -d "preprocessing/Vegetables_preprocessing" ]; then
             echo "✅ Output directory exists"
             ls -lh preprocessing/Vegetables_preprocessing/
@@ -76,4 +100,3 @@ jobs:
           path: preprocessing/Vegetables_preprocessing
           retention-days: 30
           if-no-files-found: error
-
